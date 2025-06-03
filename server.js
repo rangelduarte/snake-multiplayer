@@ -5,6 +5,7 @@ const io = require('socket.io')(http);
 
 const PORT = process.env.PORT || 3000;
 const GRID_SIZE = 40; // 800/20 = 40 cells
+const MAX_FOODS = 3;
 
 app.use(express.static('public'));
 
@@ -14,14 +15,43 @@ let snakeBodies = {};
 
 // Função para gerar posição aleatória para comida
 function generateFood() {
-  return {
-    x: Math.floor(Math.random() * GRID_SIZE),
-    y: Math.floor(Math.random() * GRID_SIZE)
-  };
+  let newFood;
+  let validPosition = false;
+  
+  while (!validPosition) {
+    newFood = {
+      x: Math.floor(Math.random() * GRID_SIZE),
+      y: Math.floor(Math.random() * GRID_SIZE)
+    };
+    
+    // Verifica se a posição não está ocupada por outra comida
+    validPosition = true;
+    for (let food of foods) {
+      if (food.x === newFood.x && food.y === newFood.y) {
+        validPosition = false;
+        break;
+      }
+    }
+    
+    // Verifica se a posição não está ocupada por nenhuma cobra
+    if (validPosition) {
+      for (let id in snakeBodies) {
+        for (let segment of snakeBodies[id]) {
+          if (segment.x === newFood.x && segment.y === newFood.y) {
+            validPosition = false;
+            break;
+          }
+        }
+        if (!validPosition) break;
+      }
+    }
+  }
+  
+  return newFood;
 }
 
-// Inicializa algumas comidas
-for (let i = 0; i < 5; i++) {
+// Inicializa as comidas
+for (let i = 0; i < MAX_FOODS; i++) {
   foods.push(generateFood());
 }
 
@@ -104,6 +134,8 @@ setInterval(() => {
       if (foods[i].x === newX && foods[i].y === newY) {
         foods.splice(i, 1);
         ateFood = true;
+        // Adiciona nova comida imediatamente
+        foods.push(generateFood());
         break;
       }
     }
@@ -112,10 +144,12 @@ setInterval(() => {
     myBody.unshift({x: newX, y: newY});
     if (!ateFood) {
       myBody.pop();
-    } else {
-      // Adiciona nova comida
-      foods.push(generateFood());
     }
+  }
+
+  // Garante que sempre existam 3 comidas
+  while (foods.length < MAX_FOODS) {
+    foods.push(generateFood());
   }
 
   // Envia estado atualizado para todos os clientes
