@@ -11,7 +11,7 @@ let players = {};
 
 io.on('connection', (socket) => {
   console.log('Jogador conectado:', socket.id);
-  players[socket.id] = { x: 10, y: 10, direction: 'right' };
+  players[socket.id] = { x: 15, y: 15, direction: 'right' };
 
   socket.on('move', (direction) => {
     if (players[socket.id]) players[socket.id].direction = direction;
