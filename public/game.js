@@ -3,6 +3,8 @@ const ctx = canvas.getContext('2d');
 const socket = io();
 
 let players = {};
+let foods = [];
+let snakeBodies = {};
 let isDead = false;
 
 // Criar botão de reiniciar (inicialmente escondido)
@@ -16,6 +18,7 @@ restartButton.style.transform = 'translate(-50%, -50%)';
 restartButton.style.padding = '10px 20px';
 restartButton.style.fontSize = '20px';
 restartButton.style.cursor = 'pointer';
+restartButton.style.zIndex = '1000';
 document.body.appendChild(restartButton);
 
 restartButton.addEventListener('click', () => {
@@ -31,7 +34,10 @@ document.addEventListener('keydown', (e) => {
 });
 
 socket.on('state', (data) => {
-  players = data;
+  players = data.players;
+  foods = data.foods;
+  snakeBodies = data.snakeBodies;
+  
   const myPlayer = players[socket.id];
   
   if (myPlayer && !myPlayer.isAlive && !isDead) {
@@ -60,13 +66,27 @@ function draw() {
     ctx.stroke();
   }
   
-  // Desenha os jogadores
+  // Desenha as comidas
+  ctx.fillStyle = 'yellow';
+  for (let food of foods) {
+    ctx.beginPath();
+    ctx.arc(food.x * 20 + 10, food.y * 20 + 10, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Desenha as cobras
   for (let id in players) {
     const p = players[id];
+    const body = snakeBodies[id];
+    
+    // Desenha o corpo
     ctx.fillStyle = id === socket.id ? 'lime' : 'red';
     if (!p.isAlive) {
       ctx.fillStyle = '#666';
     }
-    ctx.fillRect(p.x * 20, p.y * 20, 18, 18);
+    
+    for (let segment of body) {
+      ctx.fillRect(segment.x * 20, segment.y * 20, 18, 18);
+    }
   }
 }
