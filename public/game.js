@@ -48,6 +48,23 @@ socket.on('state', (data) => {
   draw();
 });
 
+// Jogador principal (azul)
+const headImgBlue = new Image();
+headImgBlue.src = 'moblu.png';
+
+const bodyImgBlue = new Image();
+bodyImgBlue.src = 'rasBlu.png';
+
+// Adversário (vermelho)
+const headImgRed = new Image();
+headImgRed.src = 'mored.png';
+
+const bodyImgRed = new Image();
+bodyImgRed.src = 'rasRed.png';
+
+const foodImg = new Image();
+foodImg.src = 'combu.png'; // opcional, só se você quiser trocar a comida
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
@@ -67,13 +84,10 @@ function draw() {
   }
   
   // Desenha as comidas
-  ctx.fillStyle = 'yellow';
-  for (let food of foods) {
-    ctx.beginPath();
-    ctx.arc(food.x * 20 + 10, food.y * 20 + 10, 5, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  
+    for (let food of foods) {
+    ctx.drawImage(foodImg, food.x * 20, food.y * 20, 20, 20);
+    }
+
   // Desenha as cobras
   for (let id in players) {
     const p = players[id];
@@ -85,8 +99,16 @@ function draw() {
       ctx.fillStyle = '#666';
     }
     
-    for (let segment of body) {
-      ctx.fillRect(segment.x * 20, segment.y * 20, 18, 18);
+    body.forEach((segment, index) => {
+    const isSelf = id === socket.id;
+    const headImg = isSelf ? headImgBlue : headImgRed;
+    const bodyImg = isSelf ? bodyImgBlue : bodyImgRed;
+
+    if (index === 0) {
+        ctx.drawImage(headImg, segment.x * 20, segment.y * 20, 20, 20);
+    } else {
+        ctx.drawImage(bodyImg, segment.x * 20, segment.y * 20, 20, 20);
     }
+    });
   }
 }
